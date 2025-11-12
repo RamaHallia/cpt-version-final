@@ -51,6 +51,30 @@ export const MeetingHistory = ({ meetings = [], onDelete, onView, onSendEmail, o
 
   const colorPalette = ['#F97316', '#EC4899', '#6366F1', '#10B981', '#FACC15', '#0EA5E9', '#F97373', '#8B5CF6', '#FB923C', '#14B8A6'];
 
+  // Générer une couleur de vignette basée sur la catégorie ou l'ID de la réunion
+  const getThumbnailGradient = (meeting: Meeting) => {
+    if (meeting.category?.color) {
+      const color = meeting.category.color;
+      return `linear-gradient(135deg, ${color}15 0%, ${color}30 50%, ${color}15 100%)`;
+    }
+
+    // Générer une couleur basée sur l'ID de la réunion
+    const hash = meeting.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colorIndex = hash % colorPalette.length;
+    const color = colorPalette[colorIndex];
+    return `linear-gradient(135deg, ${color}15 0%, ${color}30 50%, ${color}15 100%)`;
+  };
+
+  const getThumbnailIcon = (meeting: Meeting) => {
+    // Couleur de l'icône basée sur la catégorie ou l'index
+    if (meeting.category?.color) {
+      return meeting.category.color;
+    }
+    const hash = meeting.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colorIndex = hash % colorPalette.length;
+    return colorPalette[colorIndex];
+  };
+
   const normalizeHex = (hex: string) => {
     let clean = (hex || '').replace('#', '').trim();
     if (clean.length === 3) {
@@ -933,9 +957,22 @@ const previewBaseScale = 0.22;
               onDragEnd={handleDragEnd}
               onClick={() => editingId !== meeting.id && onView(meeting)}
             >
-              {/* Preview placeholder - zone grise avec icône */}
-              <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border-b-2 border-gray-200 group-hover:from-coral-50 group-hover:to-peach-50 transition-all duration-300">
-                <FileText className="w-12 h-12 text-gray-300 group-hover:text-coral-400 transition-colors duration-300" />
+              {/* Preview placeholder - personnalisé avec couleur */}
+              <div
+                className="h-32 flex items-center justify-center border-b-2 border-gray-200 transition-all duration-300 relative overflow-hidden"
+                style={{
+                  background: getThumbnailGradient(meeting)
+                }}
+              >
+                {/* Pattern de fond subtil */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-0 w-20 h-20 rounded-full blur-2xl" style={{ background: getThumbnailIcon(meeting) }}></div>
+                  <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full blur-3xl" style={{ background: getThumbnailIcon(meeting) }}></div>
+                </div>
+                <FileText
+                  className="w-12 h-12 transition-all duration-300 relative z-10 group-hover:scale-110"
+                  style={{ color: getThumbnailIcon(meeting) }}
+                />
               </div>
 
               {/* Contenu */}
@@ -1260,54 +1297,54 @@ const previewBaseScale = 0.22;
         </div>
       ))}
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 px-2 animate-fadeInUp delay-300">
-            <div className="text-sm text-cocoa-600">
-              Page {currentPage} sur {totalPages} • {filteredMeetings.length} réunion{filteredMeetings.length !== 1 ? 's' : ''}
-            </div>
-            <nav className="flex items-center gap-2" aria-label="Pagination des réunions">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="h-10 w-10 flex items-center justify-center rounded-full border border-coral-200 text-coral-700 hover:bg-coral-100 hover:scale-110 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:scale-100"
-                aria-label="Page précédente"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex items-center gap-1">
-                {paginationRange.map((item, index) => (
-                  item === 'dots' ? (
-                    <span key={`dots-${index}`} className="px-2 text-sm font-medium text-cocoa-400">...</span>
-                  ) : (
-                    <button
-                      key={`page-${item}`}
-                      onClick={() => setCurrentPage(item)}
-                      className={`min-w-[2.5rem] h-10 px-3 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-110 ${
-                        currentPage === item
-                          ? 'bg-gradient-to-r from-coral-500 to-sunset-500 text-white shadow-lg shadow-coral-500/30'
-                          : 'border border-coral-200 text-coral-700 hover:bg-coral-100'
-                      }`}
-                      aria-current={currentPage === item ? 'page' : undefined}
-                    >
-                      {item}
-                    </button>
-                  )
-                ))}
-              </div>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="h-10 w-10 flex items-center justify-center rounded-full border border-coral-200 text-coral-700 hover:bg-coral-100 hover:scale-110 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:scale-100"
-                aria-label="Page suivante"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </nav>
-          </div>
-        )}
         </>
+      )}
+
+      {/* Pagination commune aux deux vues */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 px-2 animate-fadeInUp delay-300">
+          <div className="text-sm text-cocoa-600">
+            Page {currentPage} sur {totalPages} • {filteredMeetings.length} réunion{filteredMeetings.length !== 1 ? 's' : ''}
+          </div>
+          <nav className="flex items-center gap-2" aria-label="Pagination des réunions">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="h-10 w-10 flex items-center justify-center rounded-full border border-coral-200 text-coral-700 hover:bg-coral-100 hover:scale-110 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:scale-100"
+              aria-label="Page précédente"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-1">
+              {paginationRange.map((item, index) => (
+                item === 'dots' ? (
+                  <span key={`dots-${index}`} className="px-2 text-sm font-medium text-cocoa-400">...</span>
+                ) : (
+                  <button
+                    key={`page-${item}`}
+                    onClick={() => setCurrentPage(item)}
+                    className={`min-w-[2.5rem] h-10 px-3 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-110 ${
+                      currentPage === item
+                        ? 'bg-gradient-to-r from-coral-500 to-sunset-500 text-white shadow-lg shadow-coral-500/30'
+                        : 'border border-coral-200 text-coral-700 hover:bg-coral-100'
+                    }`}
+                    aria-current={currentPage === item ? 'page' : undefined}
+                  >
+                    {item}
+                  </button>
+                )
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="h-10 w-10 flex items-center justify-center rounded-full border border-coral-200 text-coral-700 hover:bg-coral-100 hover:scale-110 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:scale-100"
+              aria-label="Page suivante"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </nav>
+        </div>
       )}
 
     {showManageCategories && (
