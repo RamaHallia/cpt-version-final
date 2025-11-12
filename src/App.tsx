@@ -1605,9 +1605,9 @@ function App() {
               {/* Contenu principal de l'enregistrement */}
               <div className="flex-1 px-4 md:px-8 py-4 md:py-8 overflow-auto">
               {!isRecording ? (
-                <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl p-6 md:p-12 border border-orange-100">
-                  <div className="flex flex-col items-center justify-center py-8 md:py-16">
-                    {/* Bouton démarrer en premier */}
+                <div className="relative bg-white rounded-2xl md:rounded-3xl shadow-2xl p-6 md:p-12 border-2 border-orange-100 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-coral-50/30 via-transparent to-sunset-50/30 pointer-events-none"></div>
+                  <div className="relative flex flex-col items-center justify-center py-8 md:py-16">
                     <div className="mb-12">
                     <RecordingControls
                       isRecording={isRecording}
@@ -1623,7 +1623,7 @@ function App() {
 
                     
 
-                    <div className="mb-8 w-full max-w-2xl px-4">
+                    <div className="relative mb-8 w-full max-w-2xl px-4">
                       <label htmlFor="meetingTitle" className="block text-xs md:text-sm font-semibold text-cocoa-800 mb-3 text-center">
                         Nom de la réunion (optionnel)
                       </label>
@@ -1633,7 +1633,7 @@ function App() {
                         value={meetingTitle}
                         onChange={(e) => setMeetingTitle(e.target.value)}
                         placeholder="Ex: Réunion d'équipe - Planning Q4"
-                        className="w-full px-4 md:px-6 py-3 md:py-4 border-2 border-orange-200 rounded-xl md:rounded-2xl focus:outline-none focus:border-coral-500 focus:ring-4 focus:ring-coral-500/20 text-sm md:text-base text-cocoa-800 placeholder-cocoa-400 transition-all text-center"
+                        className="w-full px-4 md:px-6 py-3 md:py-4 border-2 border-orange-200 rounded-xl md:rounded-2xl focus:outline-none focus:border-coral-500 focus:ring-4 focus:ring-coral-500/20 text-sm md:text-base text-cocoa-800 placeholder-cocoa-400 transition-all duration-300 text-center hover:border-coral-300 hover:shadow-lg"
                       />
                       <p className="text-xs text-cocoa-500 mt-2 text-center">
                         Si vide, l'IA générera un titre automatiquement
@@ -1660,14 +1660,15 @@ function App() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl p-6 md:p-12 border border-orange-100">
-                  <div className="flex flex-col items-center py-4 md:py-8">
+                <div className="relative bg-white rounded-2xl md:rounded-3xl shadow-2xl p-6 md:p-12 border-2 border-orange-100 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-coral-50/20 via-transparent to-sunset-50/20 pointer-events-none"></div>
+                  <div className="relative flex flex-col items-center py-4 md:py-8">
                     <div className="mb-6 md:mb-8">
-                      {/* Animation de pulsation pendant l'enregistrement */}
                       <div className="relative w-20 h-20 md:w-24 md:h-24">
                         <div className="absolute inset-0 bg-coral-400 rounded-full animate-ping opacity-75"></div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-coral-500 to-coral-600 rounded-full flex items-center justify-center">
-                          <Mic className="w-10 h-10 md:w-12 md:h-12 text-white" />
+                        <div className="absolute inset-0 bg-coral-400 rounded-full opacity-20 blur-xl"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-coral-500 via-coral-600 to-sunset-500 rounded-full flex items-center justify-center shadow-glow-coral">
+                          <Mic className="w-10 h-10 md:w-12 md:h-12 text-white drop-shadow-lg" />
                         </div>
                       </div>
                     </div>
@@ -1692,20 +1693,20 @@ function App() {
                       <div className="flex items-center gap-2 mb-4">
                         <button
                           onClick={() => setActiveSuggestionsTab('clarify')}
-                          className={`px-4 py-2 rounded-full text-sm md:text-base font-semibold transition-all border-2 ${
+                          className={`px-4 py-2 rounded-full text-sm md:text-base font-semibold transition-all duration-300 border-2 ${
                             activeSuggestionsTab === 'clarify'
-                              ? 'bg-white border-purple-300 text-purple-900 shadow-sm'
-                              : 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'
+                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-blue-400 text-white shadow-lg scale-105'
+                              : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 hover:scale-105'
                           }`}
                         >
                           Points à clarifier
                         </button>
                         <button
                           onClick={() => setActiveSuggestionsTab('explore')}
-                          className={`px-4 py-2 rounded-full text-sm md:text-base font-semibold transition-all border-2 ${
+                          className={`px-4 py-2 rounded-full text-sm md:text-base font-semibold transition-all duration-300 border-2 ${
                             activeSuggestionsTab === 'explore'
-                              ? 'bg-white border-orange-300 text-coral-900 shadow-sm'
-                              : 'bg-orange-50 border-orange-200 text-coral-700 hover:bg-orange-100'
+                              ? 'bg-gradient-to-r from-coral-500 to-sunset-500 border-coral-400 text-white shadow-lg scale-105'
+                              : 'bg-white border-orange-200 text-coral-700 hover:bg-coral-50 hover:border-coral-300 hover:scale-105'
                           }`}
                         >
                           Sujets à explorer
@@ -1713,16 +1714,16 @@ function App() {
                       </div>
 
                       {activeSuggestionsTab === 'clarify' ? (
-                      // Bloc Points à clarifier
-                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl md:rounded-2xl p-4 md:p-6 border-2 border-purple-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                      <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 rounded-xl md:rounded-2xl p-4 md:p-6 border-2 border-blue-200 shadow-lg overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"></div>
+                        <div className="relative flex items-center gap-3 mb-4">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
                             {/* Icône ampoule avec animation */}
                             <svg className="w-5 h-5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                             </svg>
                           </div>
-                          <h4 className="text-lg md:text-xl font-bold text-purple-900">Points à clarifier</h4>
+                          <h4 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">Points à clarifier</h4>
                         </div>
 
                         {suggestions.some(s => s.suggestions && s.suggestions.length > 0) ? (
@@ -1760,10 +1761,10 @@ function App() {
                         )}
                       </div>
                       ) : (
-                      // Bloc Sujets à explorer
-                      <div className="bg-gradient-to-br from-orange-50 to-coral-50 rounded-xl md:rounded-2xl p-4 md:p-6 border-2 border-orange-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-8 h-8 bg-coral-500 rounded-full flex items-center justify-center">
+                      <div className="relative bg-gradient-to-br from-coral-50 via-orange-50 to-sunset-50 rounded-xl md:rounded-2xl p-4 md:p-6 border-2 border-coral-200 shadow-lg overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"></div>
+                        <div className="relative flex items-center gap-3 mb-4">
+                          <div className="w-8 h-8 bg-gradient-to-br from-coral-500 to-sunset-600 rounded-full flex items-center justify-center shadow-lg">
                             {/* Icône boussole avec animation */}
                             <svg className="w-5 h-5 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -1809,7 +1810,8 @@ function App() {
                       </div>
                       )}
 
-                      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl md:rounded-2xl p-4 md:p-6 border-2 border-orange-200 mt-6">
+                      <div className="relative bg-gradient-to-br from-peach-50 to-coral-50 rounded-xl md:rounded-2xl p-4 md:p-6 border-2 border-coral-200 mt-6 shadow-lg overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
                         <label htmlFor="notes" className="block text-xs md:text-sm font-semibold text-cocoa-800 mb-3">
                           Notes complémentaires
                       </label>
@@ -1818,7 +1820,7 @@ function App() {
                         value={recordingNotes}
                         onChange={(e) => setRecordingNotes(e.target.value)}
                           placeholder="Ajoutez vos propres notes ici..."
-                          className="w-full h-32 md:h-40 px-4 md:px-6 py-3 md:py-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:border-coral-500 focus:ring-4 focus:ring-coral-500/20 resize-none text-sm md:text-base text-cocoa-800 placeholder-cocoa-400 transition-all bg-white"
+                          className="relative w-full h-32 md:h-40 px-4 md:px-6 py-3 md:py-4 border-2 border-orange-200 rounded-xl focus:outline-none focus:border-coral-500 focus:ring-4 focus:ring-coral-500/20 resize-none text-sm md:text-base text-cocoa-800 placeholder-cocoa-400 transition-all duration-300 bg-white hover:border-coral-300 hover:shadow-lg"
                       />
                         <p className="text-xs text-cocoa-500 mt-2">
                           Ces notes seront ajoutées au résumé final
@@ -1861,9 +1863,10 @@ function App() {
                       onClick={() => {
                         handleViewMeeting(meeting);
                       }}
-                      className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border-2 border-orange-100 hover:border-coral-300 hover:shadow-lg transition-all cursor-pointer group"
+                      className="relative bg-gradient-to-br from-peach-50 to-coral-50 rounded-xl p-4 border-2 border-orange-100 hover:border-coral-300 hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden hover:scale-105"
                     >
-                      <h4 className="font-bold text-cocoa-800 text-sm truncate mb-2 group-hover:text-coral-600 transition-colors">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-coral-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                      <h4 className="relative font-bold text-cocoa-800 text-sm truncate mb-2 group-hover:text-coral-600 transition-colors duration-300">
                         {meeting.title}
                       </h4>
                       <div className="flex items-center gap-2 text-xs text-cocoa-600">
