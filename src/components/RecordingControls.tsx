@@ -98,7 +98,7 @@ export const RecordingControls = ({
 
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-coral-500 to-sunset-500 blur-xl opacity-20 animate-pulse-soft"></div>
-        <div className="relative text-6xl font-mono font-bold bg-gradient-to-r from-coral-600 via-sunset-600 to-coral-600 bg-clip-text text-transparent bg-[length:200%_100%] animate-shimmer tabular-nums">
+        <div className="relative text-6xl font-mono font-bold text-coral-600 tabular-nums">
           {formatTime(recordingTime)}
         </div>
       </div>
