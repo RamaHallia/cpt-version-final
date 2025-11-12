@@ -813,7 +813,7 @@ const previewBaseScale = 0.22;
         </div>
         <button
           onClick={() => setShowManageCategories(true)}
-          className="group relative flex items-center gap-2 text-sm font-semibold text-coral-600 hover:text-coral-700 transition-all duration-300 px-3 py-2 rounded-lg hover:bg-coral-50 hover:scale-105 overflow-hidden"
+          className="group relative flex items-center gap-2 text-sm font-semibold text-coral-600 hover:text-coral-700 transition-all duration-300 px-3 py-2 rounded-lg hover:bg-coral-50 overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-coral-100/0 via-coral-100/50 to-coral-100/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
           <FolderPlus className="relative w-4 h-4" />
@@ -841,7 +841,7 @@ const previewBaseScale = 0.22;
             e.preventDefault();
             handleCategoryDrop(null);
           }}
-          className={`${getCategoryChipClassName(dropHighlightCategoryId === 'all', selectedCategoryId === 'all', Boolean(draggedMeetingId))} transition-all duration-300 hover:scale-110 hover:shadow-lg`}
+          className={`${getCategoryChipClassName(dropHighlightCategoryId === 'all', selectedCategoryId === 'all', Boolean(draggedMeetingId))} transition-all duration-300 hover:shadow-lg`}
           style={getChipStyle(null, selectedCategoryId === 'all', dropHighlightCategoryId === 'all')}
         >
           Toutes
@@ -870,7 +870,7 @@ const previewBaseScale = 0.22;
                 e.preventDefault();
                 handleCategoryDrop(category.id);
               }}
-              className={`${getCategoryChipClassName(dropHighlightCategoryId === category.id, selectedCategoryId === category.id, Boolean(draggedMeetingId))} transition-all duration-300 hover:scale-110 hover:shadow-lg animate-fadeInRight`}
+              className={`${getCategoryChipClassName(dropHighlightCategoryId === category.id, selectedCategoryId === category.id, Boolean(draggedMeetingId))} transition-all duration-300 hover:shadow-lg animate-fadeInRight`}
               style={{
                 ...getChipStyle(category, selectedCategoryId === category.id, dropHighlightCategoryId === category.id),
                 animationDelay: `${(index + 1) * 50}ms`
@@ -972,7 +972,7 @@ const previewBaseScale = 0.22;
                   <div className="absolute bottom-0 right-0 w-24 h-24 rounded-full blur-3xl" style={{ background: getThumbnailIcon(meeting) }}></div>
                 </div>
                 <FileText
-                  className="w-12 h-12 transition-all duration-300 relative z-10 group-hover:scale-110"
+                  className="w-12 h-12 transition-all duration-300 relative z-10"
                   style={{ color: getThumbnailIcon(meeting) }}
                 />
               </div>
@@ -1214,7 +1214,7 @@ const previewBaseScale = 0.22;
               </div>
               {meeting.category && (
                 <span
-                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full border animate-fadeInRight transition-all duration-300 hover:scale-110"
+                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full border animate-fadeInRight transition-all duration-300"
                   style={getCategoryBadgeStyle(meeting.category.color)}
                 >
                   <Tag className="w-3.5 h-3.5" />
@@ -1366,7 +1366,7 @@ const previewBaseScale = 0.22;
                 setCategoryFormError(null);
                 setNewCategoryName('');
               }}
-              className="p-2 rounded-lg hover:bg-white/20 transition-all duration-300 hover:scale-110 hover:rotate-90"
+              className="p-2 rounded-lg hover:bg-white/20 transition-all duration-300 hover:rotate-90"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1390,7 +1390,7 @@ const previewBaseScale = 0.22;
                 />
                 <button
                   type="submit"
-                  className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-coral-500 to-sunset-500 text-white font-semibold transition-all duration-300 shadow-md hover:shadow-xl hover:scale-105 overflow-hidden"
+                  className="group relative inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-coral-500 to-sunset-500 text-white font-semibold transition-all duration-300 shadow-md hover:shadow-xl overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                   <PlusCircle className="relative w-4 h-4" />
@@ -1403,7 +1403,7 @@ const previewBaseScale = 0.22;
                     key={`new-color-${color}`}
                     type="button"
                     onClick={() => setNewCategoryColor(color)}
-                    className={`w-9 h-9 rounded-full border-2 transition-all duration-300 hover:scale-125 shadow-md hover:shadow-lg animate-fadeIn ${newCategoryColor === color ? 'border-coral-600 scale-125 ring-4 ring-coral-500/30' : 'border-white/50'}`}
+                    className={`w-9 h-9 rounded-full border-2 transition-all duration-300 shadow-md hover:shadow-lg animate-fadeIn ${newCategoryColor === color ? 'border-coral-600 ring-4 ring-coral-500/30' : 'border-white/50'}`}
                     style={{ background: color, animationDelay: `${index * 30}ms` }}
                     title={color}
                   />
@@ -1440,7 +1440,7 @@ const previewBaseScale = 0.22;
                               key={`palette-${category.id}-${color}`}
                               type="button"
                               onClick={() => handleUpdateCategoryColor(category.id, color)}
-                              className={`w-7 h-7 rounded-full border-2 transition-all duration-300 hover:scale-125 shadow-sm hover:shadow-md ${category.color === color ? 'border-coral-600 scale-125 ring-4 ring-coral-500/30' : 'border-white/50'}`}
+                              className={`w-7 h-7 rounded-full border-2 transition-all duration-300 shadow-sm hover:shadow-md ${category.color === color ? 'border-coral-600 ring-4 ring-coral-500/30' : 'border-white/50'}`}
                               style={{ background: color }}
                               title={color}
                             />
@@ -1449,7 +1449,7 @@ const previewBaseScale = 0.22;
                     </div>
                     <button
                       onClick={() => handleDeleteCategory(category.id)}
-                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-md"
+                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 hover:shadow-md"
                       title="Supprimer la catégorie"
                     >
                       <Trash2 className="w-5 h-5" />
