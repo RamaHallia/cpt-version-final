@@ -1,0 +1,131 @@
+/* Styles personnalisés pour l'éditeur d'email */
+
+/* Assurer que l'éditeur Quill a un scroll correct */
+.email-composer-quill .ql-container {
+  height: 340px !important;
+  overflow-y: auto !important;
+  border: none !important;
+}
+
+.email-composer-quill .ql-toolbar {
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  background: linear-gradient(to bottom, #fafafa, #ffffff);
+  padding: 12px !important;
+}
+
+.email-composer-quill .ql-editor {
+  min-height: 340px;
+  padding: 20px;
+  font-size: 15px;
+  line-height: 1.7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+/* Barre de défilement personnalisée */
+.email-composer-quill .ql-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.email-composer-quill .ql-editor::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.email-composer-quill .ql-editor::-webkit-scrollbar-thumb {
+  background: #EF6855;
+  border-radius: 4px;
+}
+
+.email-composer-quill .ql-editor::-webkit-scrollbar-thumb:hover {
+  background: #E5503F;
+}
+
+/* Styles pour les boutons de la toolbar */
+.email-composer-quill .ql-toolbar button:hover,
+.email-composer-quill .ql-toolbar button.ql-active {
+  color: #EF6855 !important;
+}
+
+.email-composer-quill .ql-toolbar .ql-stroke {
+  stroke: #666 !important;
+}
+
+.email-composer-quill .ql-toolbar button:hover .ql-stroke,
+.email-composer-quill .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #EF6855 !important;
+}
+
+.email-composer-quill .ql-toolbar .ql-fill {
+  fill: #666 !important;
+}
+
+.email-composer-quill .ql-toolbar button:hover .ql-fill,
+.email-composer-quill .ql-toolbar button.ql-active .ql-fill {
+  fill: #EF6855 !important;
+}
+
+/* Placeholder style */
+.email-composer-quill .ql-editor.ql-blank::before {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Limiter la taille des images dans l'éditeur */
+.email-composer-quill .ql-editor img {
+  max-width: 80px !important;
+  height: auto !important;
+  display: block;
+  margin: 10px 0;
+}
+
+/* Focus state */
+.email-composer-quill:focus-within {
+  box-shadow: 0 0 0 3px rgba(239, 104, 85, 0.1);
+}
+
+/* Animations pour les pièces jointes */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attachment-item {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Animations d'entrée de la modale */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+

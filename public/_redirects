@@ -1,0 +1,2 @@
+# Rediriger toutes les routes vers index.html pour que React gère le routing
+/*    /index.html   200
