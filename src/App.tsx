@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Mic, History, LogOut, Settings as SettingsIcon, Upload, LayoutDashboard, Mail, BellRing, PauseCircle, StopCircle, PlayCircle, X } from 'lucide-react';
+import { Mic, History, LogOut, Settings as SettingsIcon, Upload, LayoutDashboard, Mail, BellRing, PauseCircle, StopCircle, PlayCircle, X, CreditCard } from 'lucide-react';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { useLiveSuggestions } from './hooks/useLiveSuggestions';
 import { RecordingControls } from './components/RecordingControls';
@@ -13,6 +13,7 @@ import { MeetingDetail } from './components/MeetingDetail';
 import { Login } from './components/Login';
 import { LandingPage } from './components/LandingPage';
 import { Settings } from './components/Settings';
+import { Subscription } from './components/Subscription';
 import { Dashboard } from './components/Dashboard';
 import { LiveSuggestions } from './components/LiveSuggestions';
 import { AudioUpload } from './components/AudioUpload';
@@ -31,6 +32,7 @@ import { LongRecordingReminderModal } from './components/LongRecordingReminderMo
 import { RecordingLimitModal } from './components/RecordingLimitModal';
 import { ShortRecordingWarningModal } from './components/ShortRecordingWarningModal';
 import { ContactSupport } from './components/ContactSupport';
+import { SubscriptionSelection } from './components/SubscriptionSelection';
 import { supabase, Meeting } from './lib/supabase';
 import { useBackgroundProcessing } from './hooks/useBackgroundProcessing';
 import { transcribeAudio, generateSummary } from './services/transcription';
@@ -92,7 +94,7 @@ function App() {
     }
 
     // Si un hash valide existe, l'utiliser
-    if (hash && ['record', 'history', 'detail', 'settings', 'upload', 'dashboard', 'contact'].includes(hash)) {
+    if (hash && ['record', 'history', 'detail', 'settings', 'upload', 'dashboard', 'contact', 'subscription'].includes(hash)) {
       return hash as any;
     }
 
@@ -100,7 +102,7 @@ function App() {
     return 'landing' as const;
   };
 
-  const [view, setView] = useState<'landing' | 'auth' | 'record' | 'history' | 'detail' | 'settings' | 'upload' | 'dashboard' | 'gmail-callback' | 'contact'>(getInitialView());
+  const [view, setView] = useState<'landing' | 'auth' | 'record' | 'history' | 'detail' | 'settings' | 'upload' | 'dashboard' | 'gmail-callback' | 'contact' | 'subscription'>(getInitialView());
   const [historyTab, setHistoryTab] = useState<'meetings' | 'emails'>('meetings'); // Onglet d'historique
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState('');
@@ -147,6 +149,9 @@ function App() {
   const [shortRecordingSeconds, setShortRecordingSeconds] = useState(0);
   const [recordingReminderToast, setRecordingReminderToast] = useState<{ message: string } | null>(null);
   const categoryColorSupportedRef = useRef<boolean | null>(null);
+  const [subscription, setSubscription] = useState<{ plan_type: 'starter' | 'unlimited'; is_active: boolean } | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [subscriptionUpgradeOnly, setSubscriptionUpgradeOnly] = useState(false);
 
   const {
     tasks: backgroundTasks,
@@ -276,7 +281,7 @@ function App() {
 
     // Restaurer la vue depuis l'URL (hash) au chargement
     const hash = window.location.hash.replace('#', '');
-    if (hash && ['record', 'history', 'upload', 'settings', 'dashboard', 'contact'].includes(hash)) {
+    if (hash && ['record', 'history', 'upload', 'settings', 'dashboard', 'contact', 'subscription'].includes(hash)) {
       console.log('🔄 Restauration de la vue depuis l\'URL:', hash);
       setView(hash as any);
     } else if (hash === 'detail') {
@@ -297,7 +302,7 @@ function App() {
       if (session?.user && event === 'SIGNED_IN') {
         // Si on a déjà une vue depuis l'URL, ne pas la changer
         const currentHash = window.location.hash.replace('#', '');
-        if (!currentHash || !['record', 'history', 'upload', 'settings', 'dashboard', 'contact'].includes(currentHash)) {
+        if (!currentHash || !['record', 'history', 'upload', 'settings', 'dashboard', 'contact', 'subscription'].includes(currentHash)) {
           setView('record');
           window.history.replaceState({ view: 'record' }, '', '#record');
         }
@@ -580,10 +585,36 @@ function App() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        await checkSubscription(session.user.id);
+      }
     } catch (error) {
-      
+
     } finally {
       setIsAuthLoading(false);
+    }
+  };
+
+  const checkSubscription = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .select('plan_type, is_active')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      setSubscription(data);
+
+      // Si pas d'abonnement actif, afficher le modal de sélection
+      if (!data || !data.is_active) {
+        setShowSubscriptionModal(true);
+        setSubscriptionUpgradeOnly(false);
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
     }
   };
 
@@ -1250,16 +1281,17 @@ function App() {
   };
 
   const handleUpgradeToUnlimited = () => {
-    console.log('👑 Upgrade demandé, génération du résumé puis redirection');
+    console.log('👑 Upgrade demandé, affichage modal paiement');
     setShowQuotaReachedModal(false);
-    
+
     // Arrêter l'enregistrement et générer le résumé
     stopRecording();
-    
-    // Rediriger vers Settings après un court délai pour laisser le traitement commencer
+
+    // Afficher le modal d'abonnement en mode upgrade
     setTimeout(() => {
-      setView('settings');
-    }, 1000);
+      setSubscriptionUpgradeOnly(true);
+      setShowSubscriptionModal(true);
+    }, 500);
   };
 
   const handleContinueWithSummary = () => {
@@ -1358,7 +1390,8 @@ function App() {
   const handleQuotaFullUpgrade = () => {
     console.log('👑 QuotaFull: Utilisateur veut upgrade');
     setShowQuotaFullModal(false);
-    setView('settings');
+    setSubscriptionUpgradeOnly(true);
+    setShowSubscriptionModal(true);
   };
 
   const handleQuotaFullClose = () => {
@@ -1552,6 +1585,20 @@ function App() {
             >
               <SettingsIcon className="w-4 h-4 md:w-5 md:h-5" />
               <span>Paramètres</span>
+            </button>
+            <button
+              onClick={() => {
+                setView('subscription');
+                window.location.hash = 'subscription';
+              }}
+              className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl font-semibold transition-all text-sm md:text-base whitespace-nowrap ${
+                view === 'subscription'
+                  ? 'bg-gradient-to-r from-coral-500 to-coral-600 text-white shadow-lg shadow-coral-500/30'
+                  : 'text-cocoa-700 hover:bg-orange-50'
+              }`}
+            >
+              <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
+              <span>Abonnement</span>
             </button>
             <button
               onClick={() => {
@@ -2031,6 +2078,8 @@ function App() {
             />
           ) : view === 'settings' ? (
             <Settings userId={user?.id || ''} />
+          ) : view === 'subscription' ? (
+            <Subscription userId={user?.id || ''} />
           ) : view === 'contact' ? (
             <div className="max-w-4xl mx-auto h-full flex items-start py-4">
               <ContactSupport
@@ -2420,6 +2469,19 @@ function App() {
         onClose={handleMobileVisioTipCancel}
         onContinue={handleMobileVisioTipContinue}
       />
+
+      {/* Modal de sélection d'abonnement */}
+      {showSubscriptionModal && (
+        <SubscriptionSelection
+          onClose={() => {
+            if (subscription && subscription.is_active) {
+              setShowSubscriptionModal(false);
+            }
+          }}
+          currentPlan={subscription?.plan_type}
+          upgradeOnly={subscriptionUpgradeOnly}
+        />
+      )}
     </div>
   );
 }
