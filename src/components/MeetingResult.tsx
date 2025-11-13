@@ -913,9 +913,9 @@ export const MeetingResult = ({ title, transcript, summary, suggestions = [], us
           </div>
         </div>
 
-        <div className="overflow-y-auto p-4 md:p-10 flex-1">
+        <div className="overflow-y-auto p-4 md:p-10 flex-1 flex items-start justify-center">
           {activeTab === 'summary' ? (
-            <div className="max-w-4xl">
+            <div className="max-w-4xl w-full">
               {isEditing ? (
                 <textarea
                   value={editedSummary}
@@ -934,7 +934,7 @@ export const MeetingResult = ({ title, transcript, summary, suggestions = [], us
               )}
             </div>
           ) : activeTab === 'transcript' ? (
-            <div className="max-w-4xl">
+            <div className="max-w-4xl w-full">
               {isEditing ? (
                 <textarea
                   value={editedTranscript}
@@ -1006,7 +1006,7 @@ export const MeetingResult = ({ title, transcript, summary, suggestions = [], us
               )}
             </div>
           ) : (
-            <div className="max-w-4xl">
+            <div className="max-w-4xl w-full">
               {suggestions && suggestions.length > 0 ? (
                 <div className="space-y-4">
                   {suggestions.some(s => s.suggestions && s.suggestions.length > 0) && (

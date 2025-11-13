@@ -1086,10 +1086,10 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
           </div>
         </div>
 
-        <div className="p-10 flex-1 overflow-auto">
-
+        <div className="p-4 md:p-10 flex-1 overflow-auto flex items-start justify-center">
+          <div className="max-w-4xl w-full">
           {!isEditing && (meeting.participant_first_name || meeting.participant_last_name || meeting.participant_email || meeting.attachment_name) && (
-            <div className="max-w-4xl mb-8">
+            <div className="mb-8">
               <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-100">
                 <h3 className="text-xl font-bold text-cocoa-800 mb-4">Informations du participant</h3>
                 {(meeting.participant_first_name || meeting.participant_last_name) && (
@@ -1121,7 +1121,7 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
           )}
 
           {activeTab === 'summary' ? (
-            <div className="max-w-4xl">
+            <div>
               {isEditing ? (
                 <div className="space-y-6">
                   <div>
@@ -1167,7 +1167,7 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
               )}
             </div>
           ) : activeTab === 'transcript' ? (
-            <div className="max-w-4xl">
+            <div>
               {isEditing ? (
                 <textarea
                   value={editedTranscript}
@@ -1236,7 +1236,7 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
               )}
             </div>
           ) : (
-            <div className="max-w-4xl">
+            <div>
               {(clarifications.length > 0 || topics.length > 0) ? (
                 <div className="space-y-4">
                   {clarifications.length > 0 && (
@@ -1280,6 +1280,7 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
               )}
             </div>
           )}
+          </div>
         </div>
       </div>
 
