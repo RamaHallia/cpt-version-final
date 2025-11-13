@@ -211,7 +211,7 @@ export const FloatingStartButton = ({ onStartRecording, isVisible }: FloatingSta
         </div>
       )}
       <button
-        className={`relative w-28 h-28 bg-gradient-to-br from-coral-500 via-coral-600 to-sunset-500 rounded-full shadow-2xl flex items-center justify-center transition-all duration-500 hover:scale-125 hover:rotate-[360deg] shadow-glow-coral group ${
+        className={`relative w-28 h-28 bg-gradient-to-br from-coral-500 via-coral-600 to-sunset-500 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-glow-coral group ${
           isAnimating ? 'opacity-0' : 'opacity-100'
         }`}
         title="Démarrer un enregistrement"
