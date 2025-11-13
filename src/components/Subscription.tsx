@@ -205,9 +205,16 @@ export const Subscription = ({ userId }: SubscriptionProps) => {
       setChangeType(data.type);
 
       if (data.type === 'upgrade') {
-        setTimeout(async () => {
+        const reloadInvoicesMultipleTimes = async () => {
           await loadInvoices();
-        }, 3000);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          await loadInvoices();
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          await loadInvoices();
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          await loadInvoices();
+        };
+        reloadInvoicesMultipleTimes();
       } else {
         await loadInvoices();
       }

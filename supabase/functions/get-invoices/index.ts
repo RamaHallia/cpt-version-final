@@ -48,7 +48,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Récupérer le customer_id de l'utilisateur
     const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
@@ -62,22 +61,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Récupérer les factures depuis Stripe
     const invoices = await stripe.invoices.list({
       customer: customerData.customer_id,
       limit: 100,
     });
 
-    // Formater les factures pour le frontend
+    console.log(`Retrieved ${invoices.data.length} invoices for customer ${customerData.customer_id}`);
+
     const formattedInvoices = invoices.data.map((invoice) => {
       let description = 'Abonnement';
+      let isProration = false;
 
       if (invoice.lines.data.length > 0) {
         const line = invoice.lines.data[0];
         description = line.description || 'Abonnement';
 
-        if (invoice.lines.data.some(l => l.proration === true)) {
+        isProration = invoice.lines.data.some(l => l.proration === true);
+
+        if (isProration) {
           description = 'Ajustement de prorata - Changement de plan';
+          console.log(`Found proration invoice: ${invoice.id}, amount: ${invoice.total / 100}, status: ${invoice.status}`);
         }
       }
 
@@ -93,8 +96,11 @@ Deno.serve(async (req) => {
         description,
         period_start: invoice.period_start,
         period_end: invoice.period_end,
+        is_proration: isProration,
       };
     });
+
+    console.log(`Formatted ${formattedInvoices.length} invoices, including ${formattedInvoices.filter(i => i.is_proration).length} proration invoices`);
 
     return new Response(
       JSON.stringify({ invoices: formattedInvoices }),
