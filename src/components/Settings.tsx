@@ -42,10 +42,20 @@ export const Settings = ({ userId }: SettingsProps) => {
   const [newIncorrectWord, setNewIncorrectWord] = useState('');
   const [newCorrectWord, setNewCorrectWord] = useState('');
 
+  // Contact Groups
+  const [contactGroups, setContactGroups] = useState<Array<{ id: string; name: string; description: string; contacts: Array<{ id: string; name: string; email: string }> }>>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupDescription, setNewGroupDescription] = useState('');
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactEmail, setNewContactEmail] = useState('');
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+
   useEffect(() => {
     loadSettings();
     loadSubscription();
     loadCustomDictionary();
+    loadContactGroups();
 
     // Écouter les messages de la popup OAuth
     const handleMessage = (event: MessageEvent) => {
@@ -153,6 +163,132 @@ export const Settings = ({ userId }: SettingsProps) => {
     }
 
     await loadCustomDictionary();
+  };
+
+  // Contact Groups Functions
+  const loadContactGroups = async () => {
+    // Charger les groupes
+    const { data: groups, error: groupsError } = await supabase
+      .from('contact_groups')
+      .select('id, name, description')
+      .eq('user_id', userId)
+      .order('name');
+
+    if (groupsError) {
+      console.error('Erreur lors du chargement des groupes:', groupsError);
+      return;
+    }
+
+    if (groups) {
+      // Pour chaque groupe, charger ses contacts
+      const groupsWithContacts = await Promise.all(
+        groups.map(async (group) => {
+          const { data: contacts } = await supabase
+            .from('contacts')
+            .select('id, name, email')
+            .eq('group_id', group.id)
+            .order('name');
+
+          return {
+            ...group,
+            contacts: contacts || []
+          };
+        })
+      );
+
+      setContactGroups(groupsWithContacts);
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim()) {
+      alert('Veuillez entrer un nom de groupe');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('contact_groups')
+      .insert({
+        user_id: userId,
+        name: newGroupName,
+        description: newGroupDescription
+      })
+      .select()
+      .single();
+
+    if (error) {
+      alert('Erreur lors de la création du groupe');
+      console.error(error);
+      return;
+    }
+
+    setNewGroupName('');
+    setNewGroupDescription('');
+    setIsCreatingGroup(false);
+    await loadContactGroups();
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    if (!confirm('Voulez-vous vraiment supprimer ce groupe et tous ses contacts ?')) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('contact_groups')
+      .delete()
+      .eq('id', groupId);
+
+    if (error) {
+      alert('Erreur lors de la suppression du groupe');
+      console.error(error);
+      return;
+    }
+
+    if (selectedGroup === groupId) {
+      setSelectedGroup(null);
+    }
+
+    await loadContactGroups();
+  };
+
+  const handleAddContact = async (groupId: string) => {
+    if (!newContactEmail.trim()) {
+      alert('Veuillez entrer une adresse email');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('contacts')
+      .insert({
+        group_id: groupId,
+        name: newContactName,
+        email: newContactEmail
+      });
+
+    if (error) {
+      alert('Erreur lors de l\'ajout du contact');
+      console.error(error);
+      return;
+    }
+
+    setNewContactName('');
+    setNewContactEmail('');
+    await loadContactGroups();
+  };
+
+  const handleDeleteContact = async (contactId: string) => {
+    const { error } = await supabase
+      .from('contacts')
+      .delete()
+      .eq('id', contactId);
+
+    if (error) {
+      alert('Erreur lors de la suppression du contact');
+      console.error(error);
+      return;
+    }
+
+    await loadContactGroups();
   };
 
   const loadSubscription = async () => {
@@ -1214,10 +1350,185 @@ export const Settings = ({ userId }: SettingsProps) => {
           </div>
         </div>
 
+        {/* Groupes de destinataires */}
+        <div className="bg-white rounded-2xl shadow-lg border-2 border-coral-200 p-6 animate-fadeInUp delay-400">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md">
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-cocoa-900">Groupes de destinataires</h3>
+                <p className="text-sm text-cocoa-600">Créez des groupes de contacts pour envoyer vos emails rapidement</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsCreatingGroup(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all shadow-md"
+            >
+              <Plus className="w-5 h-5" />
+              Nouveau groupe
+            </button>
+          </div>
+
+          {/* Formulaire de création de groupe */}
+          {isCreatingGroup && (
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border-2 border-purple-200 mb-4">
+              <h4 className="font-semibold text-cocoa-900 mb-3">Créer un nouveau groupe</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-semibold text-cocoa-700 mb-2">
+                    Nom du groupe *
+                  </label>
+                  <input
+                    type="text"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="Ex: Équipe commerciale"
+                    className="w-full px-4 py-2 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-cocoa-700 mb-2">
+                    Description (optionnel)
+                  </label>
+                  <input
+                    type="text"
+                    value={newGroupDescription}
+                    onChange={(e) => setNewGroupDescription(e.target.value)}
+                    placeholder="Ex: Tous les membres de l'équipe commerciale"
+                    className="w-full px-4 py-2 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCreateGroup}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Créer le groupe
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCreatingGroup(false);
+                      setNewGroupName('');
+                      setNewGroupDescription('');
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-cocoa-700 rounded-xl font-semibold hover:bg-gray-300 transition-all"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Liste des groupes */}
+          <div className="space-y-4">
+            {contactGroups.length > 0 ? (
+              contactGroups.map((group) => (
+                <div key={group.id} className="border-2 border-purple-200 rounded-xl p-4 bg-gradient-to-br from-white to-purple-50">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-bold text-cocoa-900 text-lg">{group.name}</h4>
+                      {group.description && (
+                        <p className="text-sm text-cocoa-600 mt-1">{group.description}</p>
+                      )}
+                      <p className="text-xs text-cocoa-500 mt-1">
+                        {group.contacts.length} contact{group.contacts.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteGroup(group.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Supprimer le groupe"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Liste des contacts du groupe */}
+                  {selectedGroup === group.id ? (
+                    <div className="mt-4 space-y-3">
+                      <div className="bg-white rounded-lg p-3 border border-purple-200">
+                        <h5 className="font-semibold text-cocoa-900 mb-3 text-sm">Contacts du groupe</h5>
+                        {group.contacts.length > 0 ? (
+                          <div className="space-y-2 mb-3">
+                            {group.contacts.map((contact) => (
+                              <div key={contact.id} className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
+                                <div className="flex-1">
+                                  <p className="font-medium text-cocoa-900 text-sm">{contact.name || 'Sans nom'}</p>
+                                  <p className="text-xs text-cocoa-600">{contact.email}</p>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteContact(contact.id)}
+                                  className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-cocoa-500 italic mb-3">Aucun contact dans ce groupe</p>
+                        )}
+
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={newContactName}
+                            onChange={(e) => setNewContactName(e.target.value)}
+                            placeholder="Nom (optionnel)"
+                            className="w-full px-3 py-2 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                          <input
+                            type="email"
+                            value={newContactEmail}
+                            onChange={(e) => setNewContactEmail(e.target.value)}
+                            placeholder="Email *"
+                            className="w-full px-3 py-2 text-sm border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                          <button
+                            onClick={() => handleAddContact(group.id)}
+                            className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transition-all"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Ajouter un contact
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedGroup(null)}
+                        className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                      >
+                        Fermer
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setSelectedGroup(group.id)}
+                      className="mt-2 text-sm text-purple-600 hover:text-purple-700 font-medium"
+                    >
+                      Gérer les contacts ({group.contacts.length})
+                    </button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-cocoa-500">
+                <Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Aucun groupe de destinataires</p>
+                <p className="text-xs mt-1">Créez votre premier groupe pour organiser vos contacts</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         <button
           onClick={handleSave}
           disabled={isSaving || isUploading}
-          className="group relative flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-coral-500 to-sunset-500 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden animate-fadeInUp delay-400"
+          className="group relative flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-coral-500 to-sunset-500 text-white rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden animate-fadeInUp delay-500"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
           <Save className="relative w-5 h-5" />

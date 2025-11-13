@@ -56,9 +56,13 @@ export function EmailComposer({
   const [emailMethod, setEmailMethod] = useState<'gmail' | 'smtp' | 'app'>('app');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Contact Groups
+  const [contactGroups, setContactGroups] = useState<Array<{ id: string; name: string; contacts: Array<{ name: string; email: string }> }>>([]);
+  const [showGroupSelector, setShowGroupSelector] = useState(false);
+
   const quillRef = useRef<ReactQuill>(null);
 
-  // Charger la méthode d'envoi configurée
+  // Charger la méthode d'envoi configurée et les groupes de contacts
   useEffect(() => {
     const loadEmailMethod = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -83,7 +87,39 @@ export function EmailComposer({
       }
     };
 
+    const loadContactGroups = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Charger les groupes
+      const { data: groups } = await supabase
+        .from('contact_groups')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (groups) {
+        // Pour chaque groupe, charger ses contacts
+        const groupsWithContacts = await Promise.all(
+          groups.map(async (group) => {
+            const { data: contacts } = await supabase
+              .from('contacts')
+              .select('name, email')
+              .eq('group_id', group.id);
+
+            return {
+              ...group,
+              contacts: contacts || []
+            };
+          })
+        );
+
+        setContactGroups(groupsWithContacts);
+      }
+    };
+
     loadEmailMethod();
+    loadContactGroups();
   }, []);
 
   // Fonction pour construire le corps avec les pièces jointes
@@ -185,6 +221,22 @@ export function EmailComposer({
 
   const updateBccRecipient = (index: number, value: string) => {
     setBccRecipients(prev => prev.map((r, i) => i === index ? { email: value } : r));
+  };
+
+  // Gestion des groupes de contacts
+  const handleSelectGroup = (groupId: string) => {
+    const group = contactGroups.find(g => g.id === groupId);
+    if (!group) return;
+
+    // Ajouter tous les contacts du groupe aux destinataires
+    const newRecipients = group.contacts.map(contact => ({ email: contact.email }));
+    setRecipients(prev => {
+      // Éviter les doublons
+      const existingEmails = new Set(prev.map(r => r.email.toLowerCase()));
+      const uniqueNewRecipients = newRecipients.filter(r => !existingEmails.has(r.email.toLowerCase()));
+      return [...prev, ...uniqueNewRecipients];
+    });
+    setShowGroupSelector(false);
   };
 
   // Gestion des pièces jointes
@@ -436,7 +488,7 @@ export function EmailComposer({
                       disabled={isSending}
                       required
                     />
-                    <div className="w-1/2 flex gap-3">
+                    <div className="w-1/2 flex gap-3 flex-wrap">
                       <button
                         onClick={addRecipient}
                         disabled={isSending}
@@ -445,6 +497,18 @@ export function EmailComposer({
                         <Plus className="w-4 h-4" />
                         Ajouter un destinataire
                       </button>
+                      {contactGroups.length > 0 && (
+                        <button
+                          onClick={() => setShowGroupSelector(true)}
+                          disabled={isSending}
+                          className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium disabled:opacity-50"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          Groupe
+                        </button>
+                      )}
                       {!showCC && (
                         <button
                           onClick={() => {
@@ -713,6 +777,42 @@ export function EmailComposer({
           </button>
         </div>
       </div>
+
+      {/* Modal de sélection de groupe */}
+      {showGroupSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Sélectionner un groupe</h3>
+              <button
+                onClick={() => setShowGroupSelector(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {contactGroups.map((group) => (
+                <button
+                  key={group.id}
+                  onClick={() => handleSelectGroup(group.id)}
+                  className="w-full text-left p-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl border-2 border-purple-200 hover:border-purple-300 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-gray-900">{group.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {group.contacts.length} contact{group.contacts.length > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <Plus className="w-5 h-5 text-purple-600" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
