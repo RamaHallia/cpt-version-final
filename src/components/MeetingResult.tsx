@@ -47,34 +47,62 @@ export const MeetingResult = ({ title, transcript, summary, suggestions = [], us
   const [signatureLogoUrl, setSignatureLogoUrl] = useState('');
 
   // Charger les paramètres utilisateur
-  const handleWordDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    console.log('🖱️ Double-clic détecté');
+  const handleWordDoubleClick = (e: React.MouseEvent) => {
+    console.log('🖱️ Double-clic détecté sur:', e.target);
 
     const selection = window.getSelection();
-    if (!selection) return;
-
-    selection.modify('move', 'backward', 'word');
-    selection.modify('extend', 'forward', 'word');
-
-    const selectedText = selection.toString().trim();
-    console.log('📝 Mot sélectionné:', selectedText);
-
-    if (selectedText && selectedText.length > 0) {
-      const wordMatch = selectedText.match(/^[\w'À-ſ]+$/);
-      if (wordMatch) {
-        setSelectedWord(selectedText);
-        setWordPosition({ start: 0, end: selectedText.length, text: selectedText });
-        setShowWordCorrection(true);
-        console.log('✅ Modal ouverte pour:', selectedText);
-      } else {
-        console.log('⚠️ Texte sélectionné invalide:', selectedText);
-      }
+    if (!selection) {
+      console.log('❌ Pas de sélection disponible');
+      return;
     }
 
-    selection.removeAllRanges();
+    const selectedText = selection.toString().trim();
+    console.log('📝 Texte actuellement sélectionné:', selectedText);
+
+    if (selectedText && selectedText.length > 0 && selectedText.length < 50) {
+      const cleanWord = selectedText.replace(/[^\w'À-ſ\s-]/g, '').trim();
+      const words = cleanWord.split(/\s+/);
+      const word = words[0];
+
+      if (word && word.length > 0) {
+        console.log('✅ Ouverture modal pour:', word);
+        setSelectedWord(word);
+        setWordPosition({ start: 0, end: word.length, text: word });
+        setShowWordCorrection(true);
+      }
+    } else {
+      const target = e.target as HTMLElement;
+      const text = target.textContent || '';
+
+      if (text) {
+        selection.removeAllRanges();
+        const range = document.createRange();
+        const textNode = target.firstChild || target;
+
+        if (textNode.nodeType === Node.TEXT_NODE) {
+          range.selectNodeContents(textNode);
+          selection.addRange(range);
+
+          selection.modify('move', 'backward', 'word');
+          selection.modify('extend', 'forward', 'word');
+
+          const word = selection.toString().trim();
+          console.log('📝 Mot extrait:', word);
+
+          if (word && word.length > 0) {
+            const cleanWord = word.replace(/[^\w'À-ſ-]/g, '');
+            if (cleanWord) {
+              console.log('✅ Ouverture modal pour:', cleanWord);
+              setSelectedWord(cleanWord);
+              setWordPosition({ start: 0, end: cleanWord.length, text: cleanWord });
+              setShowWordCorrection(true);
+            }
+          }
+        }
+      }
+
+      selection.removeAllRanges();
+    }
   };
 
   const handleWordReplace = async (newWord: string, replaceAll: boolean, saveToDict: boolean) => {
