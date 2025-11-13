@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       return corsResponse({ error: 'Method not allowed' }, 405);
     }
 
-    const { price_id, success_url, cancel_url, mode, tax_id_collection } = await req.json();
+    const { price_id, success_url, cancel_url, mode } = await req.json();
 
     const error = validateParameters(
       { price_id, success_url, cancel_url, mode },
@@ -193,6 +193,9 @@ Deno.serve(async (req) => {
       automatic_tax: {
         enabled: true,
       },
+      tax_id_collection: {
+        enabled: true,
+      },
       customer_update: {
         address: 'auto',
       },
@@ -201,13 +204,6 @@ Deno.serve(async (req) => {
         enabled: true,
       },
     };
-
-    // Enable tax ID collection for businesses if requested
-    if (tax_id_collection) {
-      sessionConfig.tax_id_collection = {
-        enabled: true,
-      };
-    }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
