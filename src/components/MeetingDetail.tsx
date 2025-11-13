@@ -1122,30 +1122,7 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
 
           {activeTab === 'summary' ? (
             <div>
-              {isEditing ? (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-bold text-cocoa-800 mb-2">
-                      <FileText className="w-4 h-4 inline mr-2 text-amber-600" />
-                      Notes prises pendant l'enregistrement
-                    </label>
-                    <textarea
-                      value={editedNotes}
-                      onChange={(e) => setEditedNotes(e.target.value)}
-                      placeholder="Ajoutez vos notes ici..."
-                      className="w-full min-h-[150px] p-4 border-2 border-amber-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-cocoa-800 leading-relaxed bg-gradient-to-br from-amber-50 to-orange-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-cocoa-800 mb-2">Résumé IA</label>
-                    <textarea
-                      value={editedSummary}
-                      onChange={(e) => setEditedSummary(e.target.value)}
-                      className="w-full min-h-[600px] p-6 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-coral-500 text-cocoa-800 text-lg leading-relaxed"
-                    />
-                  </div>
-                </div>
-              ) : (
+              {isEditing ? null : (
                 <>
                   {meeting.notes && (
                     <div className="mb-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-200">
@@ -1168,13 +1145,7 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
             </div>
           ) : activeTab === 'transcript' ? (
             <div>
-              {isEditing ? (
-                <textarea
-                  value={editedTranscript}
-                  onChange={(e) => setEditedTranscript(e.target.value)}
-                  className="w-full min-h-[400px] p-6 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-coral-500 text-cocoa-800 text-lg leading-relaxed"
-                />
-              ) : (
+              {isEditing ? null : (
                 <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-8 border-2 border-orange-100">
                   <div ref={transcriptRef} className="max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-coral-300 scrollbar-track-coral-100 cursor-text">
                     {(meeting.display_transcript || meeting.transcript) ? (
@@ -1319,6 +1290,94 @@ export const MeetingDetail = ({ meeting, onBack, onUpdate }: MeetingDetailProps)
         onReplace={handleWordReplace}
         userId={meeting.user_id}
       />
+
+      {/* Modal d'édition en plein écran */}
+      {isEditing && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-coral-500 to-sunset-500 p-6 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <Edit2 className="w-6 h-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Modification de la réunion</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-colors font-semibold"
+                >
+                  <X className="w-5 h-5" />
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-coral-600 hover:bg-orange-50 rounded-xl transition-colors font-semibold shadow-lg"
+                >
+                  <Save className="w-5 h-5" />
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
+              {/* Titre */}
+              <div>
+                <label className="block text-sm font-bold text-cocoa-800 mb-2">
+                  Titre de la réunion
+                </label>
+                <input
+                  type="text"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-coral-500 text-cocoa-800 text-lg font-semibold"
+                  placeholder="Titre de la réunion"
+                />
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-bold text-cocoa-800 mb-2">
+                  <FileText className="w-4 h-4 inline mr-2 text-amber-600" />
+                  Notes prises pendant l'enregistrement
+                </label>
+                <textarea
+                  value={editedNotes}
+                  onChange={(e) => setEditedNotes(e.target.value)}
+                  placeholder="Ajoutez vos notes ici..."
+                  className="w-full min-h-[200px] p-4 border-2 border-amber-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-cocoa-800 leading-relaxed bg-gradient-to-br from-amber-50 to-orange-50 resize-y"
+                />
+              </div>
+
+              {/* Résumé IA */}
+              <div>
+                <label className="block text-sm font-bold text-cocoa-800 mb-2">
+                  Résumé IA
+                </label>
+                <textarea
+                  value={editedSummary}
+                  onChange={(e) => setEditedSummary(e.target.value)}
+                  placeholder="Le résumé généré par l'IA apparaîtra ici..."
+                  className="w-full min-h-[400px] p-6 border-2 border-orange-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-coral-500 text-cocoa-800 text-base leading-relaxed resize-y"
+                />
+              </div>
+
+              {/* Transcription */}
+              <div>
+                <label className="block text-sm font-bold text-cocoa-800 mb-2">
+                  Transcription complète
+                </label>
+                <textarea
+                  value={editedTranscript}
+                  onChange={(e) => setEditedTranscript(e.target.value)}
+                  placeholder="La transcription complète apparaîtra ici..."
+                  className="w-full min-h-[400px] p-6 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-cocoa-800 text-base leading-relaxed bg-gradient-to-br from-blue-50 to-indigo-50 resize-y"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );
