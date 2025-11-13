@@ -1663,15 +1663,19 @@ function App() {
                 <div className="relative bg-white rounded-2xl md:rounded-3xl shadow-2xl p-6 md:p-12 border-2 border-orange-100 overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-coral-50/20 via-transparent to-sunset-50/20 pointer-events-none"></div>
                   <div className="relative flex flex-col items-center py-4 md:py-8">
-                    <div className="mb-6 md:mb-8">
+                    <button
+                      onClick={handleStop}
+                      className="mb-6 md:mb-8 group transition-transform hover:scale-105 active:scale-95"
+                      title="Cliquez pour arrêter l'enregistrement"
+                    >
                       <div className="relative w-20 h-20 md:w-24 md:h-24">
                         <div className="absolute inset-0 bg-coral-400 rounded-full animate-ping opacity-75"></div>
                         <div className="absolute inset-0 bg-coral-400 rounded-full opacity-20 blur-xl"></div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-coral-500 via-coral-600 to-sunset-500 rounded-full flex items-center justify-center shadow-glow-coral">
+                        <div className="absolute inset-0 bg-gradient-to-br from-coral-500 via-coral-600 to-sunset-500 rounded-full flex items-center justify-center shadow-glow-coral group-hover:shadow-glow-coral-strong">
                           <Mic className="w-10 h-10 md:w-12 md:h-12 text-white drop-shadow-lg" />
                         </div>
                       </div>
-                    </div>
+                    </button>
                     <h3 className="text-xl md:text-2xl font-bold text-cocoa-800 mb-2">Enregistrement en cours...</h3>
                     <p className="text-sm md:text-base text-cocoa-600 text-center max-w-md mb-6 md:mb-8 px-4">
                       L'audio est en cours d'enregistrement. Le résumé se génère progressivement.
