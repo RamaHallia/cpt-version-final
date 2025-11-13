@@ -45,6 +45,7 @@ export const MeetingResult = ({ title, transcript, summary, suggestions = [], us
   const [senderName, setSenderName] = useState('');
   const [signatureText, setSignatureText] = useState('');
   const [signatureLogoUrl, setSignatureLogoUrl] = useState('');
+  const summaryRef = React.useRef<HTMLDivElement>(null);
 
   // Charger les paramètres utilisateur
   const handleWordDoubleClick = (e: React.MouseEvent) => {
@@ -185,6 +186,23 @@ export const MeetingResult = ({ title, transcript, summary, suggestions = [], us
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  useEffect(() => {
+    const handleDblClick = (e: MouseEvent) => {
+      console.log('🌍 Double-clic global détecté');
+
+      const target = e.target as HTMLElement;
+      const summaryDiv = summaryRef.current;
+
+      if (summaryDiv && summaryDiv.contains(target)) {
+        console.log('✅ Clic dans la zone résumé');
+        handleWordDoubleClick(e as any);
+      }
+    };
+
+    document.addEventListener('dblclick', handleDblClick);
+    return () => document.removeEventListener('dblclick', handleDblClick);
+  }, [editedSummary, editedTranscript, activeTab]);
 
   const handleSave = async () => {
     if (!meetingId) {
@@ -885,8 +903,8 @@ export const MeetingResult = ({ title, transcript, summary, suggestions = [], us
               ) : (
                 <div className="prose prose-slate max-w-none">
                   <div
+                    ref={summaryRef}
                     className="text-cocoa-800 whitespace-pre-wrap leading-relaxed text-lg cursor-text"
-                    onDoubleClick={handleWordDoubleClick}
                   >
                     {renderSummaryWithBold(editedSummary)}
                   </div>
