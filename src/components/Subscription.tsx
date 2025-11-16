@@ -236,7 +236,24 @@ export const Subscription = ({ userId }: SubscriptionProps) => {
         };
         reloadInvoicesWithRetry();
       } else {
-        await loadInvoices();
+        setLastInvoiceCount(invoices.length);
+        setIsWaitingForInvoice(true);
+        const reloadInvoicesWithRetry = async () => {
+          const maxAttempts = 5;
+          const delays = [2000, 3000, 4000, 5000, 6000];
+
+          for (let i = 0; i < maxAttempts; i++) {
+            if (!isWaitingForInvoice) {
+              console.log('Rechargement arrêté : nouvelle facture détectée');
+              break;
+            }
+            await new Promise(resolve => setTimeout(resolve, delays[i]));
+            await loadInvoices();
+          }
+
+          setIsWaitingForInvoice(false);
+        };
+        reloadInvoicesWithRetry();
       }
     } catch (err: any) {
       console.error('Error:', err);
@@ -414,20 +431,26 @@ export const Subscription = ({ userId }: SubscriptionProps) => {
               {changeMessage}
             </p>
           </div>
-          {changeType === 'upgrade' && (
-            <div className="ml-8">
-              {isWaitingForInvoice ? (
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <Loader className="w-4 h-4 animate-spin" />
-                  <span>Génération de la facture de prorata en cours...</span>
-                </div>
-              ) : (
-                <p className="text-sm text-green-600">
-                  La facture d'ajustement de prorata a été générée par Stripe et apparaît dans votre liste de factures ci-dessous.
-                </p>
-              )}
-            </div>
-          )}
+          <div className="ml-8">
+            {isWaitingForInvoice ? (
+              <div className="flex items-center gap-2 text-sm">
+                <Loader className="w-4 h-4 animate-spin text-amber-600" />
+                <span className={changeType === 'upgrade' ? 'text-green-600' : 'text-blue-600'}>
+                  {changeType === 'upgrade'
+                    ? 'Génération de la facture de prorata en cours...'
+                    : 'Vérification de votre facture en cours...'
+                  }
+                </span>
+              </div>
+            ) : (
+              <p className={`text-sm ${changeType === 'upgrade' ? 'text-green-600' : 'text-blue-600'}`}>
+                {changeType === 'upgrade'
+                  ? 'La facture d\'ajustement de prorata a été générée par Stripe et apparaît dans votre liste de factures ci-dessous.'
+                  : 'Votre liste de factures a été mise à jour.'
+                }
+              </p>
+            )}
+          </div>
         </div>
       )}
 
