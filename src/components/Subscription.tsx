@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Crown, Calendar, CreditCard, Download, AlertCircle, CheckCircle, XCircle, Loader, ExternalLink, Zap, FileText, RefreshCw } from 'lucide-react';
+import { Crown, Calendar, CreditCard, Download, AlertCircle, CheckCircle, XCircle, Loader, ExternalLink, Zap, FileText, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface SubscriptionProps {
@@ -26,10 +26,22 @@ interface StripeSubscription {
   payment_method_last4: string | null;
 }
 
+interface InvoiceLine {
+  id: string;
+  description: string | null;
+  amount: number;
+  quantity: number | null;
+  proration: boolean;
+  period_start: number;
+  period_end: number;
+}
+
 interface Invoice {
   id: string;
   number: string;
   amount: number;
+  subtotal?: number;
+  tax?: number;
   currency: string;
   status: string;
   created: number;
@@ -39,6 +51,7 @@ interface Invoice {
   period_start: number;
   period_end: number;
   is_proration?: boolean;
+  lines?: InvoiceLine[];
 }
 
 export const Subscription = ({ userId }: SubscriptionProps) => {
@@ -54,6 +67,7 @@ export const Subscription = ({ userId }: SubscriptionProps) => {
   const [changeType, setChangeType] = useState<'upgrade' | 'downgrade' | null>(null);
   const [isWaitingForInvoice, setIsWaitingForInvoice] = useState(false);
   const [lastInvoiceCount, setLastInvoiceCount] = useState(0);
+  const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
 
   useEffect(() => {
     loadSubscription();
@@ -776,54 +790,141 @@ export const Subscription = ({ userId }: SubscriptionProps) => {
             {invoices.map((invoice) => (
               <div
                 key={invoice.id}
-                className="flex items-center justify-between p-4 bg-gradient-to-br from-peach-50 to-coral-50 rounded-xl border border-coral-200 hover:border-coral-300 transition-all"
+                className="bg-gradient-to-br from-peach-50 to-coral-50 rounded-xl border border-coral-200 hover:border-coral-300 transition-all overflow-hidden"
               >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-cocoa-900">Facture {invoice.number}</p>
-                    {invoice.is_proration && (
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                        📊 Prorata
-                      </span>
-                    )}
-                    {invoice.status === 'paid' && (
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                        Payée
-                      </span>
-                    )}
-                    {invoice.status === 'open' && (
-                      <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
-                        En attente
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-cocoa-600">
-                    {new Date(invoice.created * 1000).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </p>
-                  <p className="text-sm text-cocoa-500">{invoice.description}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-cocoa-900">
-                      {invoice.amount.toFixed(2)} {invoice.currency}
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-cocoa-900">Facture {invoice.number}</p>
+                      {invoice.is_proration && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                          📊 Prorata
+                        </span>
+                      )}
+                      {invoice.status === 'paid' && (
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                          Payée
+                        </span>
+                      )}
+                      {invoice.status === 'open' && (
+                        <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
+                          En attente
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-cocoa-600">
+                      {new Date(invoice.created * 1000).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
                     </p>
+                    <p className="text-sm text-cocoa-500">{invoice.description}</p>
                   </div>
-                  {invoice.invoice_pdf && (
-                    <a
-                      href={invoice.invoice_pdf}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-coral-500 to-sunset-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>PDF</span>
-                    </a>
-                  )}
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-cocoa-900">
+                        {invoice.amount.toFixed(2)} {invoice.currency}
+                      </p>
+                    </div>
+                    {invoice.lines && invoice.lines.length > 1 && (
+                      <button
+                        onClick={() => setExpandedInvoiceId(expandedInvoiceId === invoice.id ? null : invoice.id)}
+                        className="p-2 hover:bg-coral-100 rounded-lg transition-colors"
+                        title="Voir les détails"
+                      >
+                        {expandedInvoiceId === invoice.id ? (
+                          <ChevronUp className="w-5 h-5 text-cocoa-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-cocoa-600" />
+                        )}
+                      </button>
+                    )}
+                    {invoice.invoice_pdf && (
+                      <a
+                        href={invoice.invoice_pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-coral-500 to-sunset-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>PDF</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
+
+                {expandedInvoiceId === invoice.id && invoice.lines && invoice.lines.length > 0 && (
+                  <div className="border-t border-coral-200 bg-white/50 p-4">
+                    <h4 className="font-semibold text-cocoa-800 mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Détail de la facture
+                    </h4>
+                    <div className="space-y-2">
+                      {invoice.lines.map((line, index) => (
+                        <div
+                          key={line.id}
+                          className={`p-3 rounded-lg ${
+                            line.proration
+                              ? 'bg-blue-50 border border-blue-200'
+                              : 'bg-gray-50 border border-gray-200'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-cocoa-800">
+                                {line.description || `Ligne ${index + 1}`}
+                              </p>
+                              <p className="text-xs text-cocoa-500 mt-1">
+                                {new Date(line.period_start * 1000).toLocaleDateString('fr-FR', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                                {' → '}
+                                {new Date(line.period_end * 1000).toLocaleDateString('fr-FR', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className={`font-bold ${line.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {line.amount >= 0 ? '+' : ''}{line.amount.toFixed(2)} {invoice.currency}
+                              </p>
+                              {line.proration && (
+                                <span className="text-xs text-blue-600 font-medium">Prorata</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-coral-200">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-cocoa-600">Sous-total (hors taxes)</span>
+                        <span className="font-semibold text-cocoa-800">
+                          {(invoice.subtotal || invoice.amount).toFixed(2)} {invoice.currency}
+                        </span>
+                      </div>
+                      {invoice.tax && invoice.tax > 0 && (
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-cocoa-600">TVA</span>
+                          <span className="font-semibold text-cocoa-800">
+                            {invoice.tax.toFixed(2)} {invoice.currency}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-base font-bold pt-2 border-t border-coral-200">
+                        <span className="text-cocoa-900">Total</span>
+                        <span className="text-cocoa-900">
+                          {invoice.amount.toFixed(2)} {invoice.currency}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
